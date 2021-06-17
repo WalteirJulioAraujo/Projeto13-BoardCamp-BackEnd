@@ -20,6 +20,7 @@ const connection = new Pool({
 //Create-Read-Update-Delete
 
 //CRUD de categoria
+//CREATE
 app.post('/categories', async (req,res)=>{
     const { name } = req.body;
     if(!name?.trim()){
@@ -29,7 +30,7 @@ app.post('/categories', async (req,res)=>{
     try{
         const categories = await connection.query('SELECT name FROM categories');
         const categoriesArray = categories.rows.map((e)=>e.name);
-        if(categoriesArray.includes('name')){
+        if(categoriesArray.includes(name)){
             res.sendStatus(409);
             return;
         }
@@ -41,7 +42,11 @@ app.post('/categories', async (req,res)=>{
     }
 })
 
-
+//READ
+app.get('/categories', async (req,res)=>{
+    const allCategories =  await connection.query('SELECT * FROM categories');
+    res.send(allCategories.rows);
+})
 
 
 
