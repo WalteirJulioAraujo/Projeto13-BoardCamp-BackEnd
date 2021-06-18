@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import pg from 'pg';
+import joi from 'joi';
 
 const app = express();
 
@@ -17,18 +18,29 @@ const connection = new Pool({
     port: 5432,
     database: 'boardcamp'
 });
+
+//Usando a Joi
+const userSchema = joi.object({
+    username: joi.number()
+})
+
 //Create-Read-Update-Delete
 
 //CRUD de categoria
 //CREATE
 app.post('/categories', async (req,res)=>{
     const { name } = req.body;
-    if(!name?.trim()){
-        res.sendStatus(400);
+    
+    const validate = userSchema.validate({username:name});
+    if(validate.error){
+        res.sendStatus(500);
         return;
     }
-    const categoryName = name.trim();
+    
     try{
+        
+
+        const categoryName = name.trim();
         const categories = await connection.query('SELECT name FROM categories');
         const categoriesArray = categories.rows.map((e)=>e.name);
         if(categoriesArray.includes(categoryName)){
