@@ -237,7 +237,7 @@ app.put('/customers/:id', async (req,res)=>{
             return;
         }
         const allIds = await connection.query('SELECT * FROM customers WHERE id = $1',[id]);
-        if(!allIds.rows.length){
+        if(!allIds.rows.length && id!==allIds.rows.id){
             res.sendStatus(404);
             return;
         }
