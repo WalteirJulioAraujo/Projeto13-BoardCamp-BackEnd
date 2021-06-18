@@ -21,7 +21,10 @@ const connection = new Pool({
 
 //Usando a Joi
 const userSchema = joi.object({
-    username: joi.number()
+    username: joi.string().alphanum().required(),
+    stockTotal: joi.number().integer().required(),
+    categoryId: joi.number().integer().required(),
+    pricePerDay: joi.number().integer().required()
 })
 
 //Create-Read-Update-Delete
@@ -36,10 +39,8 @@ app.post('/categories', async (req,res)=>{
         res.sendStatus(500);
         return;
     }
-    
-    try{
-        
 
+    try{
         const categoryName = name.trim();
         const categories = await connection.query('SELECT name FROM categories');
         const categoriesArray = categories.rows.map((e)=>e.name);
@@ -65,21 +66,28 @@ app.get('/categories', async (req,res)=>{
 //Create
 app.post('/games', async (req,res)=>{
     const { name, image, stockTotal, categoryId, pricePerDay } = req.body;
-    if(!name?.trim()){
-        console.log(1);
-        res.sendStatus(400);
+    // if(!name?.trim()){
+    //     console.log(1);
+    //     res.sendStatus(400);
+    //     return;
+    // }
+    // if(!stockTotal || !pricePerDay){
+    //     console.log(2);
+    //     res.sendStatus(400);
+    //     return;
+    // }
+    // if(stockTotal<0 || pricePerDay<0){
+    //     console.log(3);
+    //     res.sendStatus(400);
+    //     return;
+    // }
+
+    const validate = userSchema.validate({username:name,stockTotal,categoryId,pricePerDay});
+    if(validate.error){
+        res.sendStatus(500);
         return;
     }
-    if(!stockTotal || !pricePerDay){
-        console.log(2);
-        res.sendStatus(400);
-        return;
-    }
-    if(stockTotal<0 || pricePerDay<0){
-        console.log(3);
-        res.sendStatus(400);
-        return;
-    }
+
     try{
         const categories = await connection.query('SELECT id FROM categories');
         const categoriesArray = categories.rows.map((e)=>e.id);
