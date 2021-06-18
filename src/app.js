@@ -22,9 +22,10 @@ const connection = new Pool({
 //Usando a Joi
 const userSchema = joi.object({
     username: joi.string().alphanum().required(),
-    stockTotal: joi.number().integer().required(),
-    categoryId: joi.number().integer().required(),
-    pricePerDay: joi.number().integer().required()
+    stockTotal: joi.number().integer().positive().required(),
+    categoryId: joi.number().integer().positive().required(),
+    pricePerDay: joi.number().integer().positive().required(),
+    image: joi.string().pattern(/(https?:\/\/.*\.(?:png|jpg))/)
 })
 
 //Create-Read-Update-Delete
@@ -66,23 +67,8 @@ app.get('/categories', async (req,res)=>{
 //Create
 app.post('/games', async (req,res)=>{
     const { name, image, stockTotal, categoryId, pricePerDay } = req.body;
-    // if(!name?.trim()){
-    //     console.log(1);
-    //     res.sendStatus(400);
-    //     return;
-    // }
-    // if(!stockTotal || !pricePerDay){
-    //     console.log(2);
-    //     res.sendStatus(400);
-    //     return;
-    // }
-    // if(stockTotal<0 || pricePerDay<0){
-    //     console.log(3);
-    //     res.sendStatus(400);
-    //     return;
-    // }
-
-    const validate = userSchema.validate({username:name,stockTotal,categoryId,pricePerDay});
+   
+    const validate = userSchema.validate({username:name,image,stockTotal,categoryId,pricePerDay});
     if(validate.error){
         res.sendStatus(500);
         return;
