@@ -358,7 +358,7 @@ app.post('/rentals/:id/return', async (req,res)=>{
             return;
         }
         const returnDate = dayjs().format('YYYY-MM-DD');
-        const rentDate = dayjs(searchId.rows[0].rentDate.substring(0,10));
+        const rentDate = dayjs(searchId.rows[0].rentDate);
         const pricePerDay = searchId.rows[0].originalPrice/searchId.rows[0].daysRented;
         let delayFee = (dayjs().diff(rentDate,'day')-searchId.rows[0].daysRented)*pricePerDay;
 
