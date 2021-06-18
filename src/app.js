@@ -354,7 +354,7 @@ app.post('/rentals/:id/return', async (req,res)=>{
             return;
         }
         if(searchId.rows[0].returnDate!==null){
-            res.sendStatus(404);
+            res.sendStatus(400);
             return;
         }
         const returnDate = dayjs().format('YYYY-MM-DD');
