@@ -210,7 +210,44 @@ app.post('/customers', async (req,res)=>{
         return;
     }
 })
+app.put('/customers/:id', async (req,res)=>{
+    const id = Number(req.params?.id);
+    const {name,phone,cpf} = req.body;
+    let birthday = req.body.birthday;
+    birthday = birthday.substring(0,10);
+   
+    const userSchema = joi.object({
+        name: joi.string().required(),
+        phone: joi.string().pattern(/^[1-9]{2}[0-9]{8,9}$/).required(),
+        cpf: joi.string().pattern(/^[0-9]{11}$/).required(),
+        birthday: joi.date().required(),
+        id: joi.number().integer().positive()
+    })
 
+    const validate = userSchema.validate({name, phone, cpf, birthday, id});
+    if(validate.error){
+        res.sendStatus(400);
+        return;
+    }
+    try{
+        const allCpfs = await connection.query('SELECT * FROM customers WHERE cpf = $1',[cpf]);
+        console.log(allCpfs.rows);
+        if(allCpfs.rows.length){
+            res.sendStatus(409);
+            return;
+        }
+        const allIds = await connection.query('SELECT * FROM customers WHERE id = $1',[id]);
+        if(!allIds.rows.length){
+            res.sendStatus(404);
+            return;
+        }
+        await connection.query('UPDATE customers SET name=$1,phone=$2,cpf=$3,birthday=$4 WHERE id=$5',[name, phone, cpf, birthday, id]);
+        res.sendStatus(200)
+    }catch(error){
+        console(error);
+        return;
+    }
+})
 
 app.listen(4000,()=>{
     console.log("Running on port 4000");
