@@ -93,7 +93,6 @@ app.post('/games', async (req,res)=>{
         const categories = await connection.query('SELECT id FROM categories');
         const categoriesArray = categories.rows.map((e)=>e.id);
         if(!categoriesArray.includes(categoryId)){
-            console.log(4);
             res.sendStatus(400);
             return;
         }
