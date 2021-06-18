@@ -21,11 +21,12 @@ const connection = new Pool({
 
 //Usando a Joi
 const userSchema = joi.object({
-    username: joi.string().alphanum().required(),
+    username: joi.string().required(),
     stockTotal: joi.number().integer().positive().required(),
     categoryId: joi.number().integer().positive().required(),
     pricePerDay: joi.number().integer().positive().required(),
-    image: joi.string().pattern(/(https?:\/\/.*\.(?:png|jpg))/)
+    image: joi.string().pattern(/(https?:\/\/.*\.(?:png|jpg))/),
+    id: joi.number().integer().positive()
 })
 
 //Create-Read-Update-Delete
@@ -35,7 +36,11 @@ const userSchema = joi.object({
 app.post('/categories', async (req,res)=>{
     const { name } = req.body;
     
-    const validate = userSchema.validate({username:name});
+    const userSchema = joi.object({
+        name: joi.string().alphanum().required()
+    })
+
+    const validate = userSchema.validate({name});
     if(validate.error){
         res.sendStatus(500);
         return;
@@ -67,8 +72,16 @@ app.get('/categories', async (req,res)=>{
 //Create
 app.post('/games', async (req,res)=>{
     const { name, image, stockTotal, categoryId, pricePerDay } = req.body;
+
+    const userSchema = joi.object({
+        name: joi.string().required(),
+        stockTotal: joi.number().integer().positive().required(),
+        categoryId: joi.number().integer().positive().required(),
+        pricePerDay: joi.number().integer().positive().required(),
+        image: joi.string().pattern(/(https?:\/\/.*\.(?:png|jpg))/)
+    })
    
-    const validate = userSchema.validate({username:name,image,stockTotal,categoryId,pricePerDay});
+    const validate = userSchema.validate({name,image,stockTotal,categoryId,pricePerDay});
     if(validate.error){
         res.sendStatus(500);
         return;
@@ -121,7 +134,82 @@ app.get('/games', async (req,res)=>{
     }
 })
 //CRUD Clientes
+//READ
+app.get('/customers', async (req,res)=>{
+    try{
+        const allCustomers = req.query?.cpf
+        ? await connection.query(`
+            SELECT * FROM customers
+            WHERE cpf ILIKE $1
+        `,[req.query.cpf+'%'])
+        : await connection.query(`
+        SELECT * FROM customers
+        `);
+        res.send(allCustomers.rows);
+    }catch(error){
+        console.log(error);
+        res.sendStatus(500);
+        return;
+    }
+})
 
+app.get('/customers/:id', async (req,res)=>{
+    const id = Number(req.params?.id);
+    const userSchema = joi.object({
+        id: joi.number().integer().positive()
+    })
+
+    const validate = userSchema.validate({id});
+    if(validate.error){
+        res.sendStatus(500);
+        return;
+    }
+    try{
+        const customers = await connection.query('SELECT * FROM customers WHERE id=$1',[id]);
+        if(!customers.rows.length){
+            res.send(404);
+            return;
+        }
+        res.send(customers.rows);
+    }catch(error){
+        console.log(error);
+        res.sendStatus(500);
+    }
+    
+})
+//POST
+app.post('/customers', async (req,res)=>{
+
+    const {name,phone,cpf} = req.body;
+    let birthday = req.body.birthday
+    birthday = birthday.substring(0,10);
+   
+    const userSchema = joi.object({
+        name: joi.string().required(),
+        phone: joi.string().pattern(/^[1-9]{2}[0-9]{8,9}$/).required(),
+        cpf: joi.string().pattern(/^[0-9]{11}$/).required(),
+        birthday: joi.date().required()
+    })
+
+    const validate = userSchema.validate({name, phone, cpf, birthday});
+    if(validate.error){
+        res.sendStatus(400);
+        return;
+    }
+    try{
+        const allCpfs = await connection.query('SELECT * FROM customers WHERE cpf = $1',[cpf]);
+        console.log(allCpfs.rows);
+        if(allCpfs.rows.length){
+            res.sendStatus(409);
+            return;
+        }
+
+        await connection.query('INSERT INTO customers (name,phone,cpf,birthday) VALUES ($1,$2,$3,$4)',[name,phone,cpf,birthday]);
+        res.sendStatus(201);
+    }catch(error){
+        return;
+    }
+})
 
 
 app.listen(4000,()=>{
