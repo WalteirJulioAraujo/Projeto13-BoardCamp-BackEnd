@@ -392,7 +392,7 @@ app.delete('/rentals/:id', async (req,res)=>{
             return;
         }
         if(searchId.rows[0].returnDate!==null){
-            res.sendStatus(404);
+            res.sendStatus(400);
             return;
         }
         await connection.query('DELETE FROM rentals WHERE id=$1',[req.params.id]);
