@@ -103,26 +103,24 @@ app.post('/games', async (req,res)=>{
 app.get('/games', async (req,res)=>{
     try{
         const allGames = req.query?.name 
-        ? await connection.query('SELECT * FROM games WHERE name ILIKE $1',[req.query.name+'%'])
-        :await connection.query('SELECT * FROM games');
-        
-        const allCategories = await connection.query('SELECT * FROM categories');
-        allGames.rows.map((e)=>{
-            allCategories.rows.map((j)=>{
-                if(e.id===j.id){
-                    e.categoryName=j.name;
-                    return;
-                }
-            })
-        })
-        
+        ? await connection.query(`
+        SELECT games.*,categories.name as "categoryName" 
+        FROM games JOIN categories 
+        ON games."categoryId"= categories.id
+        WHERE games.name ILIKE $1
+        `,[req.query.name+'%'])
+        : await connection.query(`
+            SELECT games.*,categories.name as "categoryName" 
+            FROM games JOIN categories 
+            ON games."categoryId"= categories.id
+        `);
         res.send(allGames.rows);
     }catch(error){
         console.log(error);
         res.sendStatus(500);
     }
 })
-
+//CRUD Clientes
 
 
 
